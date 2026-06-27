@@ -56,3 +56,58 @@ def return_on_assets(net_profit: float, total_assets: float):
     if total_assets in (None, 0):
         return None
     return net_profit / total_assets * 100
+
+
+# ---------------- Day 9 — Leverage & Efficiency ----------------
+
+def debt_to_equity(borrowings: float, equity_capital: float, reserves: float):
+    """D/E = borrowings / (equity + reserves). Returns 0 if debt-free.
+
+    Returns None only if equity base is non-positive (undefined).
+    """
+    if borrowings in (None, 0):
+        return 0
+    equity = (equity_capital or 0) + (reserves or 0)
+    if equity <= 0:
+        return None
+    return borrowings / equity
+
+
+def high_leverage_flag(de_ratio, broad_sector: str):
+    """True if D/E > 5 for a NON-Financials company (structurally abnormal)."""
+    if de_ratio is None:
+        return False
+    if broad_sector == FINANCIALS:
+        return False
+    return de_ratio > 5
+
+
+def interest_coverage(operating_profit: float, other_income: float, interest: float):
+    """ICR = (operating_profit + other_income) / interest. None if interest == 0."""
+    if interest in (None, 0):
+        return None
+    return ((operating_profit or 0) + (other_income or 0)) / interest
+
+
+def icr_label(icr_value):
+    """Display label for ICR. 'Debt Free' when ICR is None (interest == 0)."""
+    return "Debt Free" if icr_value is None else f"{icr_value:.2f}x"
+
+
+def icr_warning_flag(icr_value):
+    """True if ICR < 1.5 — at risk of not covering interest. None ICR -> False."""
+    if icr_value is None:
+        return False
+    return icr_value < 1.5
+
+
+def net_debt(borrowings: float, investments: float):
+    """Net debt = borrowings - investments (investments as liquid-asset proxy)."""
+    return (borrowings or 0) - (investments or 0)
+
+
+def asset_turnover(sales: float, total_assets: float):
+    """Asset turnover = sales / total_assets. None if total_assets == 0."""
+    if total_assets in (None, 0):
+        return None
+    return sales / total_assets
