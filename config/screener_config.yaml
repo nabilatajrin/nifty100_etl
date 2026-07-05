@@ -1,0 +1,47 @@
+# screener_config.yaml — analyst-editable threshold definitions (Sprint 3)
+# Each metric maps to a column in financial_ratios and a comparison direction.
+# direction: "min" = value must be >= threshold; "max" = value must be <= threshold.
+
+metrics:
+  roe:            {column: return_on_equity_pct,        direction: min}
+  de:             {column: debt_to_equity,              direction: max}
+  fcf:            {column: free_cash_flow_cr,            direction: min}
+  rev_cagr_5yr:   {column: revenue_cagr_5yr,            direction: min}
+  pat_cagr_5yr:   {column: pat_cagr_5yr,                direction: min}
+  opm:            {column: operating_profit_margin_pct, direction: min}
+  pe:             {column: pe_ratio,                    direction: max}
+  pb:             {column: pb_ratio,                    direction: max}
+  dividend_yield: {column: dividend_yield_pct,          direction: min}
+  icr:            {column: interest_coverage,           direction: min}
+  market_cap:     {column: market_cap_crore,            direction: min}
+  net_profit:     {column: net_profit_cr,               direction: min}
+  eps_cagr_5yr:   {column: eps_cagr_5yr,                direction: min}
+  asset_turnover: {column: asset_turnover,              direction: min}
+  sales:          {column: sales_cr,                    direction: min}
+
+# 6 preset screeners (Day 16)
+presets:
+  quality_compounder:
+    roe: 15
+    de: 1.0
+    fcf: 0
+    rev_cagr_5yr: 10
+  value_pick:
+    pe: 20
+    pb: 3.0
+    de: 2.0
+    dividend_yield: 1
+  growth_accelerator:
+    pat_cagr_5yr: 20
+    rev_cagr_5yr: 15
+    de: 2.0
+  dividend_champion:
+    dividend_yield: 2
+    fcf: 0
+  debt_free_bluechip:
+    de: 0
+    roe: 12
+    sales: 5000
+  turnaround_watch:
+    rev_cagr_5yr: 10
+    fcf: 0
