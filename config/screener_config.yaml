@@ -27,8 +27,8 @@ presets:
     fcf: 0
     rev_cagr_5yr: 10
   value_pick:
-    pe: 20
-    pb: 3.0
+    pe: 28
+    pb: 5.0
     de: 2.0
     dividend_yield: 1
   growth_accelerator:
