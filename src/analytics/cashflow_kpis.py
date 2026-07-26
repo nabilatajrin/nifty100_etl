@@ -82,3 +82,20 @@ def capital_allocation_pattern(cfo: float, cfi: float, cff: float,
         label = "Shareholder Returns"
 
     return so, si, sf, label
+
+
+# ---------------- Day 31 additions: distress & deleveraging detection ----------------
+
+def distress_signal(cfo: float, cff: float) -> bool:
+    """True if CFO < 0 AND CFF > 0 in the latest year (burning cash from ops,
+    raising cash from financing to cover it)."""
+    if cfo is None or cff is None:
+        return False
+    return cfo < 0 and cff > 0
+
+
+def deleveraging_flag(cff: float, borrowings_latest: float, borrowings_prior: float) -> bool:
+    """True if CFF < 0 AND borrowings declined year-over-year (actively paying down debt)."""
+    if cff is None or borrowings_latest is None or borrowings_prior is None:
+        return False
+    return cff < 0 and borrowings_latest < borrowings_prior
