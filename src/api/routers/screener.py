@@ -8,15 +8,25 @@ router = APIRouter(tags=["screener"])
 
 
 @router.get("/screener")
-def screener(min_roe: float = Query(None), max_de: float = Query(None),
-            min_fcf: float = Query(None), sector: str = Query(None),
-            min_rev_cagr_5yr: float = Query(None), min_pat_cagr_5yr: float = Query(None),
-            max_pe: float = Query(None)):
+def screener(
+    min_roe: float = Query(None),
+    max_de: float = Query(None),
+    min_fcf: float = Query(None),
+    sector: str = Query(None),
+    min_rev_cagr_5yr: float = Query(None),
+    min_pat_cagr_5yr: float = Query(None),
+    max_pe: float = Query(None),
+):
     """Filter companies by threshold parameters. Returns a ranked list."""
     # basic sanity validation -> HTTP 400 on clearly invalid values
-    for name, val in [("min_roe", min_roe), ("max_de", max_de), ("min_fcf", min_fcf),
-                      ("min_rev_cagr_5yr", min_rev_cagr_5yr),
-                      ("min_pat_cagr_5yr", min_pat_cagr_5yr), ("max_pe", max_pe)]:
+    for name, val in [
+        ("min_roe", min_roe),
+        ("max_de", max_de),
+        ("min_fcf", min_fcf),
+        ("min_rev_cagr_5yr", min_rev_cagr_5yr),
+        ("min_pat_cagr_5yr", min_pat_cagr_5yr),
+        ("max_pe", max_pe),
+    ]:
         if val is not None and (val != val):  # NaN check
             raise HTTPException(status_code=400, detail=f"Invalid value for {name}")
     if max_de is not None and max_de < 0:

@@ -21,13 +21,23 @@ from dotenv import load_dotenv
 def load_data(conn) -> pd.DataFrame:
     """Latest-year market_cap joined with sector and latest FCF."""
     mc = pd.read_sql("SELECT * FROM market_cap", conn)
-    mc_latest = mc.sort_values("year").groupby("company_id").tail(1).reset_index(drop=True)
+    mc_latest = (
+        mc.sort_values("year").groupby("company_id").tail(1).reset_index(drop=True)
+    )
 
-    companies = pd.read_sql("SELECT id AS company_id, company_name FROM companies", conn)
+    companies = pd.read_sql(
+        "SELECT id AS company_id, company_name FROM companies", conn
+    )
     sectors = pd.read_sql("SELECT company_id, broad_sector FROM sectors", conn)
 
-    fr = pd.read_sql("SELECT company_id, year, free_cash_flow_cr FROM financial_ratios", conn)
-    fr = fr.sort_values("year").groupby("company_id").tail(1)[["company_id", "free_cash_flow_cr"]]
+    fr = pd.read_sql(
+        "SELECT company_id, year, free_cash_flow_cr FROM financial_ratios", conn
+    )
+    fr = (
+        fr.sort_values("year")
+        .groupby("company_id")
+        .tail(1)[["company_id", "free_cash_flow_cr"]]
+    )
 
     df = mc_latest.merge(companies, on="company_id", how="left")
     df = df.merge(sectors, on="company_id", how="left")
@@ -78,22 +88,37 @@ def build_valuation_summary(conn) -> pd.DataFrame:
 
     sector_median_pe = compute_sector_median_pe(df)  # for the flag logic only
     own_5yr_median_pe = compute_5yr_median_pe(mc_all_years)
-    df = df.merge(own_5yr_median_pe.rename("5yr_median_PE"), on="company_id", how="left")
+    df = df.merge(
+        own_5yr_median_pe.rename("5yr_median_PE"), on="company_id", how="left"
+    )
 
     df["PE_vs_sector_median_pct"] = (
         (pd.to_numeric(df["pe_ratio"], errors="coerce") - sector_median_pe)
-        / sector_median_pe.replace(0, pd.NA) * 100
+        / sector_median_pe.replace(0, pd.NA)
+        * 100
     )
     df["flag"] = apply_valuation_flag(df["pe_ratio"], sector_median_pe)
 
-    out = df.rename(columns={
-        "broad_sector": "sector",
-        "pe_ratio": "P/E",
-        "pb_ratio": "P/B",
-        "ev_ebitda": "EV/EBITDA",
-    })
-    cols = ["company_id", "company_name", "sector", "P/E", "P/B", "EV/EBITDA",
-           "FCF_yield_pct", "5yr_median_PE", "PE_vs_sector_median_pct", "flag"]
+    out = df.rename(
+        columns={
+            "broad_sector": "sector",
+            "pe_ratio": "P/E",
+            "pb_ratio": "P/B",
+            "ev_ebitda": "EV/EBITDA",
+        }
+    )
+    cols = [
+        "company_id",
+        "company_name",
+        "sector",
+        "P/E",
+        "P/B",
+        "EV/EBITDA",
+        "FCF_yield_pct",
+        "5yr_median_PE",
+        "PE_vs_sector_median_pct",
+        "flag",
+    ]
     return out[[c for c in cols if c in out.columns]]
 
 

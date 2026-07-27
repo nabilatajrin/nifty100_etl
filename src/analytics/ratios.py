@@ -37,9 +37,13 @@ def return_on_equity(net_profit: float, equity_capital: float, reserves: float):
     return net_profit / equity * 100
 
 
-def return_on_capital_employed(operating_profit: float, depreciation: float,
-                               equity_capital: float, reserves: float,
-                               borrowings: float):
+def return_on_capital_employed(
+    operating_profit: float,
+    depreciation: float,
+    equity_capital: float,
+    reserves: float,
+    borrowings: float,
+):
     """ROCE = EBIT / (equity + reserves + borrowings) * 100.
 
     EBIT = operating_profit - depreciation. None if capital employed <= 0.
@@ -59,6 +63,7 @@ def return_on_assets(net_profit: float, total_assets: float):
 
 
 # ---------------- Day 9 — Leverage & Efficiency ----------------
+
 
 def debt_to_equity(borrowings: float, equity_capital: float, reserves: float):
     """D/E = borrowings / (equity + reserves). Returns 0 if debt-free.

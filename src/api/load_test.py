@@ -60,8 +60,10 @@ def main():
 
     result = run_load_test(fetch)
     print(f"10 concurrent screener requests:")
-    print(f"  Overall elapsed: {result['overall_elapsed_s']}s "
-          f"({'PASS' if result['all_within_10s'] else 'FAIL'} — target <10s)")
+    print(
+        f"  Overall elapsed: {result['overall_elapsed_s']}s "
+        f"({'PASS' if result['all_within_10s'] else 'FAIL'} — target <10s)"
+    )
     print(f"  Max individual request time: {result['max_individual_s']}s")
     print(f"  All returned 200: {result['all_status_200']}")
     print(f"  Individual times: {result['individual_times_s']}")

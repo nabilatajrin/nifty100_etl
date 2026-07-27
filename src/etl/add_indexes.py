@@ -10,8 +10,14 @@ import os
 import sqlite3
 import time
 
-INDEX_TABLES = ["profitandloss", "balancesheet", "cashflow", "financial_ratios",
-                "stock_prices", "market_cap"]
+INDEX_TABLES = [
+    "profitandloss",
+    "balancesheet",
+    "cashflow",
+    "financial_ratios",
+    "stock_prices",
+    "market_cap",
+]
 
 
 def add_indexes(conn: sqlite3.Connection) -> list:
@@ -25,19 +31,25 @@ def add_indexes(conn: sqlite3.Connection) -> list:
 
         if "company_id" in cols:
             idx_name = f"idx_{table}_company_id"
-            conn.execute(f"CREATE INDEX IF NOT EXISTS {idx_name} ON {table}(company_id)")
+            conn.execute(
+                f"CREATE INDEX IF NOT EXISTS {idx_name} ON {table}(company_id)"
+            )
             created.append(idx_name)
 
         if "company_id" in cols and "year" in cols:
             idx_name2 = f"idx_{table}_company_year"
-            conn.execute(f"CREATE INDEX IF NOT EXISTS {idx_name2} ON {table}(company_id, year)")
+            conn.execute(
+                f"CREATE INDEX IF NOT EXISTS {idx_name2} ON {table}(company_id, year)"
+            )
             created.append(idx_name2)
 
     conn.commit()
     return created
 
 
-def time_query(conn: sqlite3.Connection, sql: str, params: tuple = (), n_runs: int = 20) -> float:
+def time_query(
+    conn: sqlite3.Connection, sql: str, params: tuple = (), n_runs: int = 20
+) -> float:
     """Average time (ms) of running the same query n_runs times."""
     start = time.perf_counter()
     for _ in range(n_runs):

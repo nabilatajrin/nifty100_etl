@@ -18,17 +18,17 @@ from dotenv import load_dotenv
 from . import ratios as R
 
 FINANCIALS = "Financials"
-ROCE_TOL = 5.0   # percentage-point tolerance for cross-check
+ROCE_TOL = 5.0  # percentage-point tolerance for cross-check
 ROE_TOL = 5.0
 
 
 def _categorise(diff: float) -> str:
     """Rough categorisation of an anomaly by how large the gap is."""
     if diff > 25:
-        return "DATA_SOURCE_ISSUE"      # implausibly large gap -> likely bad source value
+        return "DATA_SOURCE_ISSUE"  # implausibly large gap -> likely bad source value
     if diff > 10:
-        return "FORMULA_DISCREPANCY"    # meaningful gap -> formula/definition mismatch
-    return "VERSION_DIFFERENCE"         # small gap -> different snapshot/period
+        return "FORMULA_DISCREPANCY"  # meaningful gap -> formula/definition mismatch
+    return "VERSION_DIFFERENCE"  # small gap -> different snapshot/period
 
 
 def build_edge_log(db_path: str | Path) -> pd.DataFrame:
@@ -45,11 +45,13 @@ def build_edge_log(db_path: str | Path) -> pd.DataFrame:
     sector_map = dict(zip(sectors["company_id"], sectors["broad_sector"]))
 
     # latest-year computed ROE per company
-    latest = (ratios.sort_values("year")
-              .groupby("company_id")
-              .tail(1)
-              .set_index("company_id")["return_on_equity_pct"]
-              .to_dict())
+    latest = (
+        ratios.sort_values("year")
+        .groupby("company_id")
+        .tail(1)
+        .set_index("company_id")["return_on_equity_pct"]
+        .to_dict()
+    )
 
     entries = []
     for _, c in companies.iterrows():
@@ -65,15 +67,18 @@ def build_edge_log(db_path: str | Path) -> pd.DataFrame:
             # some source ROE values are fractions (e.g. TCS 0.52) — flag as anomaly
             diff = abs(comp_roe - src_roe)
             if diff > ROE_TOL:
-                entries.append({
-                    "company_id": cid, "sector": sector,
-                    "metric": "ROE",
-                    "computed": round(comp_roe, 2),
-                    "source": src_roe,
-                    "diff": round(diff, 2),
-                    "category": _categorise(diff),
-                    "financials_carveout": is_financial,
-                })
+                entries.append(
+                    {
+                        "company_id": cid,
+                        "sector": sector,
+                        "metric": "ROE",
+                        "computed": round(comp_roe, 2),
+                        "source": src_roe,
+                        "diff": round(diff, 2),
+                        "category": _categorise(diff),
+                        "financials_carveout": is_financial,
+                    }
+                )
 
     log_df = pd.DataFrame(entries)
     return log_df
@@ -91,8 +96,12 @@ def main() -> None:
     with open(log_path, "w") as f:
         f.write("# Ratio Engine — Edge Case & Cross-Check Log (Sprint 2, Day 13)\n")
         f.write(f"# Total anomalies: {len(log_df)}\n")
-        f.write("# Categories: DATA_SOURCE_ISSUE, FORMULA_DISCREPANCY, VERSION_DIFFERENCE\n")
-        f.write("# Financials-sector companies: D/E high-leverage warning suppressed.\n\n")
+        f.write(
+            "# Categories: DATA_SOURCE_ISSUE, FORMULA_DISCREPANCY, VERSION_DIFFERENCE\n"
+        )
+        f.write(
+            "# Financials-sector companies: D/E high-leverage warning suppressed.\n\n"
+        )
         if log_df.empty:
             f.write("No anomalies above tolerance.\n")
         else:

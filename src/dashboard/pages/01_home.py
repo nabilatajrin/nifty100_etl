@@ -18,6 +18,7 @@ st.title("🏠 Home / Overview")
 @st.cache_data(ttl=600)
 def _latest_ratios_with_sector(year: str | None = None) -> pd.DataFrame:
     import sqlite3, os
+
     conn = sqlite3.connect(os.getenv("DB_PATH", "data/nifty100.db"))
     fr = pd.read_sql("SELECT * FROM financial_ratios", conn)
     if year:
@@ -41,18 +42,30 @@ selected_year = st.sidebar.selectbox("Year", years, index=len(years) - 1)
 df = _latest_ratios_with_sector(selected_year)
 
 if df.empty:
-    st.warning(f"No data available for {selected_year}. Showing latest available instead.")
+    st.warning(
+        f"No data available for {selected_year}. Showing latest available instead."
+    )
     df = _latest_ratios_with_sector(None)
 
 df["composite_quality_score"] = composite_score(df)
 
 # --- 6 KPI tiles ---
 c1, c2, c3, c4, c5, c6 = st.columns(6)
-c1.metric("Avg ROE", f"{df['return_on_equity_pct'].mean():.1f}%" if not df.empty else "N/A")
-c2.metric("Median P/E", f"{df['pe_ratio'].median():.1f}x" if df["pe_ratio"].notna().any() else "N/A")
-c3.metric("Median D/E", f"{df['debt_to_equity'].median():.2f}" if not df.empty else "N/A")
+c1.metric(
+    "Avg ROE", f"{df['return_on_equity_pct'].mean():.1f}%" if not df.empty else "N/A"
+)
+c2.metric(
+    "Median P/E",
+    f"{df['pe_ratio'].median():.1f}x" if df["pe_ratio"].notna().any() else "N/A",
+)
+c3.metric(
+    "Median D/E", f"{df['debt_to_equity'].median():.2f}" if not df.empty else "N/A"
+)
 c4.metric("Total Companies", f"{len(df)}")
-c5.metric("Median Rev CAGR 5yr", f"{df['revenue_cagr_5yr'].median():.1f}%" if not df.empty else "N/A")
+c5.metric(
+    "Median Rev CAGR 5yr",
+    f"{df['revenue_cagr_5yr'].median():.1f}%" if not df.empty else "N/A",
+)
 c6.metric("Debt-Free Companies", f"{(df['debt_to_equity'] == 0).sum()}")
 
 st.divider()
@@ -75,8 +88,16 @@ with col_left:
 with col_right:
     st.subheader("Top 5 by Composite Quality Score")
     top5 = df.sort_values("composite_quality_score", ascending=False).head(5)
-    cols_show = [c for c in ["company_id", "composite_quality_score",
-                             "return_on_equity_pct", "debt_to_equity"] if c in top5.columns]
+    cols_show = [
+        c
+        for c in [
+            "company_id",
+            "composite_quality_score",
+            "return_on_equity_pct",
+            "debt_to_equity",
+        ]
+        if c in top5.columns
+    ]
     if not top5.empty:
         st.dataframe(top5[cols_show].reset_index(drop=True), use_container_width=True)
     else:

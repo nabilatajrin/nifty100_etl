@@ -47,7 +47,9 @@ with c1:
     st.markdown(f"**NSE Ticker:** {ticker}")
 with c2:
     about = row.get("about_company")
-    st.markdown(f"**About:** {about if pd.notna(about) else 'No description available.'}")
+    st.markdown(
+        f"**About:** {about if pd.notna(about) else 'No description available.'}"
+    )
 
 st.divider()
 
@@ -60,9 +62,11 @@ if ratios.empty:
 
 latest = ratios.sort_values("year").iloc[-1]
 
+
 # --- 6 KPI tiles ---
 def _fmt(val, suffix=""):
     return f"{val:.2f}{suffix}" if pd.notna(val) else "N/A"
+
 
 k1, k2, k3, k4, k5, k6 = st.columns(6)
 k1.metric("ROE", _fmt(latest.get("return_on_equity_pct"), "%"))
@@ -88,11 +92,23 @@ if not pl.empty:
     hist_r = ratios.sort_values("year").tail(10)
     st.subheader("ROE & ROCE Trend — Last 10 Years")
     fig2 = go.Figure()
-    fig2.add_trace(go.Scatter(x=hist_r["year"], y=hist_r["return_on_equity_pct"],
-                              name="ROE %", mode="lines+markers"))
+    fig2.add_trace(
+        go.Scatter(
+            x=hist_r["year"],
+            y=hist_r["return_on_equity_pct"],
+            name="ROE %",
+            mode="lines+markers",
+        )
+    )
     if "return_on_capital_employed_pct" in hist_r.columns:
-        fig2.add_trace(go.Scatter(x=hist_r["year"], y=hist_r["return_on_capital_employed_pct"],
-                                  name="ROCE %", mode="lines+markers"))
+        fig2.add_trace(
+            go.Scatter(
+                x=hist_r["year"],
+                y=hist_r["return_on_capital_employed_pct"],
+                name="ROCE %",
+                mode="lines+markers",
+            )
+        )
     fig2.update_layout(height=400)
     st.plotly_chart(fig2, use_container_width=True)
 else:

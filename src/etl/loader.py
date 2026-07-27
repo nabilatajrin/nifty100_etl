@@ -12,13 +12,21 @@ from .normaliser import normalize_year, normalize_ticker
 
 # Core files: metadata row 0, header row 1
 CORE_FILES = [
-    "companies.xlsx", "profitandloss.xlsx", "balancesheet.xlsx",
-    "cashflow.xlsx", "analysis.xlsx", "documents.xlsx", "prosandcons.xlsx",
+    "companies.xlsx",
+    "profitandloss.xlsx",
+    "balancesheet.xlsx",
+    "cashflow.xlsx",
+    "analysis.xlsx",
+    "documents.xlsx",
+    "prosandcons.xlsx",
 ]
 # Supplementary files: header row 0
 SUPP_FILES = [
-    "sectors.xlsx", "stock_prices.xlsx", "market_cap.xlsx",
-    "financial_ratios.xlsx", "peer_groups.xlsx",
+    "sectors.xlsx",
+    "stock_prices.xlsx",
+    "market_cap.xlsx",
+    "financial_ratios.xlsx",
+    "peer_groups.xlsx",
 ]
 
 

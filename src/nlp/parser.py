@@ -59,28 +59,41 @@ def parse_analysis(analysis_df: pd.DataFrame) -> tuple:
                 continue
             period, value = parse_field(raw)
             if period is None:
-                failure_rows.append({
-                    "company_id": cid, "field": field, "raw_text": raw,
-                })
+                failure_rows.append(
+                    {
+                        "company_id": cid,
+                        "field": field,
+                        "raw_text": raw,
+                    }
+                )
             else:
-                parsed_rows.append({
-                    "company_id": cid, "metric_type": metric_type,
-                    "period_years": period, "value_pct": value,
-                })
+                parsed_rows.append(
+                    {
+                        "company_id": cid,
+                        "metric_type": metric_type,
+                        "period_years": period,
+                        "value_pct": value,
+                    }
+                )
 
-    parsed = pd.DataFrame(parsed_rows,
-                          columns=["company_id", "metric_type", "period_years", "value_pct"])
+    parsed = pd.DataFrame(
+        parsed_rows, columns=["company_id", "metric_type", "period_years", "value_pct"]
+    )
     failures = pd.DataFrame(failure_rows, columns=["company_id", "field", "raw_text"])
     return parsed, failures
 
 
-def cross_validate(parsed: pd.DataFrame, computed_ratios: pd.DataFrame,
-                   tolerance: float = 5.0) -> pd.DataFrame:
+def cross_validate(
+    parsed: pd.DataFrame, computed_ratios: pd.DataFrame, tolerance: float = 5.0
+) -> pd.DataFrame:
     """Flag rows where |parsed - computed| > tolerance percentage points."""
     flags = []
-    latest = (computed_ratios.sort_values("year")
-              .groupby("company_id").tail(1)
-              .set_index("company_id"))
+    latest = (
+        computed_ratios.sort_values("year")
+        .groupby("company_id")
+        .tail(1)
+        .set_index("company_id")
+    )
 
     for metric_type, computed_col in CROSS_VALIDATE_AGAINST.items():
         if computed_col not in latest.columns:
@@ -95,11 +108,15 @@ def cross_validate(parsed: pd.DataFrame, computed_ratios: pd.DataFrame,
                 continue
             diff = abs(r["value_pct"] - computed_val)
             if diff > tolerance:
-                flags.append({
-                    "company_id": cid, "metric_type": metric_type,
-                    "parsed_value": r["value_pct"], "computed_value": round(computed_val, 2),
-                    "diff": round(diff, 2),
-                })
+                flags.append(
+                    {
+                        "company_id": cid,
+                        "metric_type": metric_type,
+                        "parsed_value": r["value_pct"],
+                        "computed_value": round(computed_val, 2),
+                        "diff": round(diff, 2),
+                    }
+                )
     return pd.DataFrame(flags)
 
 
@@ -109,7 +126,9 @@ def main():
     conn = sqlite3.connect(db)
     analysis = pd.read_sql("SELECT * FROM analysis", conn)
     ratios = pd.read_sql(
-        "SELECT company_id, year, revenue_cagr_5yr, pat_cagr_5yr FROM financial_ratios", conn)
+        "SELECT company_id, year, revenue_cagr_5yr, pat_cagr_5yr FROM financial_ratios",
+        conn,
+    )
     conn.close()
 
     parsed, failures = parse_analysis(analysis)

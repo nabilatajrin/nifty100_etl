@@ -32,7 +32,9 @@ def pick_test_tickers(conn, n=10) -> list:
             break
     remaining = n - len(picks)
     if remaining > 0:
-        extra = sec[~sec["company_id"].isin(picks)]["company_id"].head(remaining).tolist()
+        extra = (
+            sec[~sec["company_id"].isin(picks)]["company_id"].head(remaining).tolist()
+        )
         picks += extra
     return picks[:n]
 
@@ -42,16 +44,27 @@ def check_profile_data(conn, ticker) -> tuple[bool, str]:
     try:
         ratios = pd.read_sql(
             "SELECT * FROM financial_ratios WHERE company_id=? ORDER BY year",
-            conn, params=(ticker,))
+            conn,
+            params=(ticker,),
+        )
         pl = pd.read_sql(
             "SELECT * FROM profitandloss WHERE company_id=? ORDER BY year",
-            conn, params=(ticker,))
+            conn,
+            params=(ticker,),
+        )
         # this is the exact fallback the page uses for missing metrics
         latest = ratios.iloc[-1] if not ratios.empty else pd.Series(dtype=float)
-        _ = f"{latest.get('return_on_equity_pct'):.2f}" if pd.notna(
-            latest.get("return_on_equity_pct")) else "N/A"
+        _ = (
+            f"{latest.get('return_on_equity_pct'):.2f}"
+            if pd.notna(latest.get("return_on_equity_pct"))
+            else "N/A"
+        )
         n_years = len(pl)
-        note = f"{n_years} yrs history" if n_years >= 5 else f"PARTIAL DATA: only {n_years} yrs"
+        note = (
+            f"{n_years} yrs history"
+            if n_years >= 5
+            else f"PARTIAL DATA: only {n_years} yrs"
+        )
         return True, note
     except Exception as e:
         return False, str(e)
@@ -72,10 +85,15 @@ def check_screener_extremes(conn) -> tuple[bool, str]:
         n_none = keep.sum()
 
         # extreme 2: everything should pass (roe >= -999)
-        keep2 = df["return_on_equity_pct"].notna() & (df["return_on_equity_pct"] >= -999)
+        keep2 = df["return_on_equity_pct"].notna() & (
+            df["return_on_equity_pct"] >= -999
+        )
         n_all = keep2.sum()
 
-        return True, f"min-extreme -> {n_none} pass, max-extreme -> {n_all} pass (no crash)"
+        return (
+            True,
+            f"min-extreme -> {n_none} pass, max-extreme -> {n_all} pass (no crash)",
+        )
     except Exception as e:
         return False, str(e)
 
@@ -91,6 +109,7 @@ def check_valuation_no_crash(conn) -> tuple[bool, str]:
 def check_missing_metric_handling() -> tuple[bool, str]:
     """None/NaN must render as 'N/A', never raise."""
     import math
+
     val = float("nan")
     try:
         display = f"{val:.2f}" if pd.notna(val) else "N/A"
@@ -139,7 +158,9 @@ def main():
 
     conn.close()
 
-    print("\n" + ("ALL CHECKS PASSED ✓" if all_ok else "SOME CHECKS FAILED — see above"))
+    print(
+        "\n" + ("ALL CHECKS PASSED ✓" if all_ok else "SOME CHECKS FAILED — see above")
+    )
 
 
 if __name__ == "__main__":

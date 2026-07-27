@@ -30,22 +30,36 @@ def latest_ratios(conn) -> pd.DataFrame:
     fr = fr.sort_values("year").groupby("company_id").tail(1).reset_index(drop=True)
 
     # bring in sales & net_profit (for sales/net_profit presets) from P&L latest year
-    pl = pd.read_sql("SELECT company_id, year, sales, net_profit FROM profitandloss", conn)
+    pl = pd.read_sql(
+        "SELECT company_id, year, sales, net_profit FROM profitandloss", conn
+    )
     pl = pl.sort_values("year").groupby("company_id").tail(1)
     pl = pl.rename(columns={"sales": "sales_cr", "net_profit": "net_profit_cr"})
-    fr = fr.merge(pl[["company_id", "sales_cr", "net_profit_cr"]],
-                  on="company_id", how="left")
+    fr = fr.merge(
+        pl[["company_id", "sales_cr", "net_profit_cr"]], on="company_id", how="left"
+    )
 
     # bring in valuation columns (P/E, P/B, dividend yield, market cap) from market_cap
     try:
         mc = pd.read_sql(
             "SELECT company_id, year, pe_ratio, pb_ratio, "
-            "dividend_yield_pct, market_cap_crore FROM market_cap", conn)
+            "dividend_yield_pct, market_cap_crore FROM market_cap",
+            conn,
+        )
         mc = mc.sort_values("year").groupby("company_id").tail(1)
         fr = fr.merge(
-            mc[["company_id", "pe_ratio", "pb_ratio",
-                "dividend_yield_pct", "market_cap_crore"]],
-            on="company_id", how="left")
+            mc[
+                [
+                    "company_id",
+                    "pe_ratio",
+                    "pb_ratio",
+                    "dividend_yield_pct",
+                    "market_cap_crore",
+                ]
+            ],
+            on="company_id",
+            how="left",
+        )
     except Exception:
         pass  # market_cap table may be absent in some builds
     return fr
@@ -83,14 +97,28 @@ def main() -> None:
         all_ok &= ok
         print(f"{name:<22}{n:>8}   {'PASS' if ok else 'CHECK (want 5-50)'}")
 
-    print("\n" + ("All presets in range ✓" if all_ok
-                  else "Some presets out of range — see CHECK rows above."))
+    print(
+        "\n"
+        + (
+            "All presets in range ✓"
+            if all_ok
+            else "Some presets out of range — see CHECK rows above."
+        )
+    )
 
     # show a sample from Quality Compounder
     qc = run_preset(df, "quality_compounder", config, sectors)
     print("\nQuality Compounder — top 8:")
-    cols = [c for c in ["company_id", "return_on_equity_pct", "debt_to_equity",
-                        "revenue_cagr_5yr"] if c in qc.columns]
+    cols = [
+        c
+        for c in [
+            "company_id",
+            "return_on_equity_pct",
+            "debt_to_equity",
+            "revenue_cagr_5yr",
+        ]
+        if c in qc.columns
+    ]
     print(qc[cols].head(8).to_string(index=False))
 
 

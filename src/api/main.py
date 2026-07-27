@@ -37,12 +37,23 @@ async def log_requests(request: Request, call_next):
     start = time.time()
     response = await call_next(request)
     duration_ms = (time.time() - start) * 1000
-    print(f"{request.method} {request.url.path} -> {response.status_code} ({duration_ms:.1f}ms)")
+    print(
+        f"{request.method} {request.url.path} -> {response.status_code} ({duration_ms:.1f}ms)"
+    )
     return response
 
 
 # ---- Routers (imported with the /api/v1 prefix) ----
-from .routers import companies, screener, sectors, peers, valuation, portfolio, documents, health  # noqa: E402
+from .routers import (
+    companies,
+    screener,
+    sectors,
+    peers,
+    valuation,
+    portfolio,
+    documents,
+    health,
+)  # noqa: E402
 
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")

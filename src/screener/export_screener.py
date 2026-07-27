@@ -25,10 +25,18 @@ BODY_FONT = Font(name="Arial")
 
 # columns to show in each sheet
 DISPLAY_COLS = [
-    "company_id", "composite_quality_score", "return_on_equity_pct",
-    "operating_profit_margin_pct", "debt_to_equity", "interest_coverage",
-    "free_cash_flow_cr", "revenue_cagr_5yr", "pat_cagr_5yr",
-    "pe_ratio", "pb_ratio", "dividend_yield_pct",
+    "company_id",
+    "composite_quality_score",
+    "return_on_equity_pct",
+    "operating_profit_margin_pct",
+    "debt_to_equity",
+    "interest_coverage",
+    "free_cash_flow_cr",
+    "revenue_cagr_5yr",
+    "pat_cagr_5yr",
+    "pe_ratio",
+    "pb_ratio",
+    "dividend_yield_pct",
 ]
 
 
@@ -73,8 +81,15 @@ def write_sheet(ws, df, preset_thresholds, config):
     for i, (_, row) in enumerate(df.iterrows(), start=2):
         for j, col in enumerate(cols, 1):
             val = row[col]
-            cell = ws.cell(row=i, column=j,
-                           value=round(val, 2) if isinstance(val, (int, float)) and pd.notna(val) else val)
+            cell = ws.cell(
+                row=i,
+                column=j,
+                value=(
+                    round(val, 2)
+                    if isinstance(val, (int, float)) and pd.notna(val)
+                    else val
+                ),
+            )
             cell.font = BODY_FONT
             metric_key = COL_TO_METRIC.get(col)
             if metric_key and metric_key in preset_thresholds:

@@ -17,7 +17,14 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    PageBreak,
+)
 
 NAVY = colors.HexColor("#1F3864")
 GREEN = colors.HexColor("#2E7D32")
@@ -27,8 +34,14 @@ GREY = colors.HexColor("#616161")
 styles = getSampleStyleSheet()
 CELL = ParagraphStyle("cell", parent=styles["Normal"], fontSize=10, leading=13)
 
-KPI_COLS = ["return_on_equity_pct", "operating_profit_margin_pct", "net_profit_margin_pct",
-           "debt_to_equity", "revenue_cagr_5yr", "free_cash_flow_cr"]
+KPI_COLS = [
+    "return_on_equity_pct",
+    "operating_profit_margin_pct",
+    "net_profit_margin_pct",
+    "debt_to_equity",
+    "revenue_cagr_5yr",
+    "free_cash_flow_cr",
+]
 KPI_LABELS = ["ROE %", "OPM %", "NPM %", "D/E", "Revenue CAGR 5yr %", "FCF ₹Cr"]
 
 FLAT_TOLERANCE_PCT = 2.0
@@ -46,23 +59,34 @@ def _trend_arrow(latest, prior) -> tuple:
     return ("↑", GREEN) if latest > prior else ("↓", RED)
 
 
-def build_company_page(ticker: str, name: str, sector: str,
-                       latest: pd.Series, prior: pd.Series) -> list:
+def build_company_page(
+    ticker: str, name: str, sector: str, latest: pd.Series, prior: pd.Series
+) -> list:
     elements = []
-    header_style = ParagraphStyle("h", parent=styles["Title"], textColor=colors.white, fontSize=16)
-    sub_style = ParagraphStyle("s", parent=styles["Normal"], textColor=colors.white, fontSize=10)
+    header_style = ParagraphStyle(
+        "h", parent=styles["Title"], textColor=colors.white, fontSize=16
+    )
+    sub_style = ParagraphStyle(
+        "s", parent=styles["Normal"], textColor=colors.white, fontSize=10
+    )
 
     header = Table(
-        [[Paragraph(f"{name} ({ticker})", header_style)],
-         [Paragraph(f"Sector: {sector or 'N/A'}", sub_style)]],
+        [
+            [Paragraph(f"{name} ({ticker})", header_style)],
+            [Paragraph(f"Sector: {sector or 'N/A'}", sub_style)],
+        ],
         colWidths=[17.5 * cm],
     )
-    header.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), NAVY),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("LEFTPADDING", (0, 0), (-1, -1), 10),
-    ]))
+    header.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), NAVY),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+            ]
+        )
+    )
     elements.append(header)
     elements.append(Spacer(1, 0.6 * cm))
 
@@ -73,19 +97,33 @@ def build_company_page(ticker: str, name: str, sector: str,
         arrow, colour = _trend_arrow(val, prior_val)
         val_str = f"{val:.2f}" if pd.notna(val) else "N/A"
         hexcode = "#%02x%02x%02x" % tuple(int(c * 255) for c in colour.rgb())
-        rows.append([Paragraph(label, CELL), Paragraph(val_str, CELL),
-                     Paragraph(f'<font color="{hexcode}">{arrow}</font>', CELL)])
+        rows.append(
+            [
+                Paragraph(label, CELL),
+                Paragraph(val_str, CELL),
+                Paragraph(f'<font color="{hexcode}">{arrow}</font>', CELL),
+            ]
+        )
 
     table = Table(rows, colWidths=[8 * cm, 5 * cm, 3 * cm])
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("FONTSIZE", (0, 0), (-1, -1), 10),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F2F2F2")]),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-    ]))
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("FONTSIZE", (0, 0), (-1, -1), 10),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -1),
+                    [colors.white, colors.HexColor("#F2F2F2")],
+                ),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
     elements.append(table)
     return elements
 
@@ -97,11 +135,19 @@ def build_portfolio_summary(out_path: str, db_path: str = None):
     companies = pd.read_sql("SELECT id, company_name FROM companies ORDER BY id", conn)
     sectors = pd.read_sql("SELECT company_id, broad_sector FROM sectors", conn)
     sector_map = dict(zip(sectors["company_id"], sectors["broad_sector"]))
-    ratios = pd.read_sql("SELECT * FROM financial_ratios ORDER BY company_id, year", conn)
+    ratios = pd.read_sql(
+        "SELECT * FROM financial_ratios ORDER BY company_id, year", conn
+    )
     conn.close()
 
-    doc = SimpleDocTemplate(out_path, pagesize=A4, topMargin=1.5 * cm,
-                            bottomMargin=1.5 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm)
+    doc = SimpleDocTemplate(
+        out_path,
+        pagesize=A4,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
+        leftMargin=1.5 * cm,
+        rightMargin=1.5 * cm,
+    )
     elements = []
     n_pages = 0
 
@@ -115,7 +161,9 @@ def build_portfolio_summary(out_path: str, db_path: str = None):
 
         if n_pages > 0:
             elements.append(PageBreak())
-        elements.extend(build_company_page(ticker, name, sector_map.get(ticker), latest, prior))
+        elements.extend(
+            build_company_page(ticker, name, sector_map.get(ticker), latest, prior)
+        )
         n_pages += 1
 
     doc.build(elements)
@@ -130,7 +178,9 @@ def main():
 
     n_pages = build_portfolio_summary(str(out_path))
     size_kb = out_path.stat().st_size / 1024
-    print(f"portfolio_summary.pdf: {n_pages} company pages, {size_kb:.0f} KB -> {out_path}")
+    print(
+        f"portfolio_summary.pdf: {n_pages} company pages, {size_kb:.0f} KB -> {out_path}"
+    )
 
 
 if __name__ == "__main__":

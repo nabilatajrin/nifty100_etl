@@ -12,6 +12,7 @@ import sqlite3
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,8 +22,11 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
 FEATURES = [
-    "return_on_equity_pct", "debt_to_equity", "revenue_cagr_5yr",
-    "fcf_cagr_5yr", "operating_profit_margin_pct",
+    "return_on_equity_pct",
+    "debt_to_equity",
+    "revenue_cagr_5yr",
+    "fcf_cagr_5yr",
+    "operating_profit_margin_pct",
 ]
 N_CLUSTERS = 5
 RANDOM_STATE = 42
@@ -97,8 +101,11 @@ def elbow_plot(df: pd.DataFrame, out_path: str = "reports/elbow_plot.png") -> di
 # Descriptive names assigned by profiling cluster centroids (Day 37 refines
 # these against real data; placeholder ordering here by centroid quality proxy).
 CLUSTER_NAME_TEMPLATE = [
-    "High-Quality Compounders", "Defensive Dividend Payers", "Value Cyclicals",
-    "Distressed or Turnaround", "Emerging Growth",
+    "High-Quality Compounders",
+    "Defensive Dividend Payers",
+    "Value Cyclicals",
+    "Distressed or Turnaround",
+    "Emerging Growth",
 ]
 
 
@@ -107,7 +114,11 @@ def name_clusters(df: pd.DataFrame, labels: np.ndarray) -> dict:
     in that order — Day 37 will refine based on full profiling."""
     tmp = df.copy()
     tmp["cluster_id"] = labels
-    ranked = tmp.groupby("cluster_id")["return_on_equity_pct"].mean().sort_values(ascending=False)
+    ranked = (
+        tmp.groupby("cluster_id")["return_on_equity_pct"]
+        .mean()
+        .sort_values(ascending=False)
+    )
     return {cid: CLUSTER_NAME_TEMPLATE[i] for i, cid in enumerate(ranked.index)}
 
 
@@ -128,12 +139,14 @@ def main():
     labels, distances, km, scaler = run_kmeans(df)
     names = name_clusters(df, labels)
 
-    out = pd.DataFrame({
-        "company_id": df["company_id"],
-        "cluster_id": labels,
-        "cluster_name": [names[c] for c in labels],
-        "distance_from_centroid": np.round(distances, 4),
-    })
+    out = pd.DataFrame(
+        {
+            "company_id": df["company_id"],
+            "cluster_id": labels,
+            "cluster_name": [names[c] for c in labels],
+            "distance_from_centroid": np.round(distances, 4),
+        }
+    )
 
     out_path = Path("output/cluster_labels.csv")
     out_path.parent.mkdir(exist_ok=True)

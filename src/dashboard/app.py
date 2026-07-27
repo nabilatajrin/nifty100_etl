@@ -18,8 +18,7 @@ st.caption(
     "Annual Reports."
 )
 
-st.markdown(
-    """
+st.markdown("""
 ### Welcome
 
 This dashboard covers all 92 Nifty 100 companies with financial ratios,
@@ -29,5 +28,4 @@ a multi-preset screener, peer comparison, and sector analytics.
 
 *Note: stock price and market capitalisation figures in this dashboard are
 SIMULATED for demonstration purposes.*
-"""
-)
+""")

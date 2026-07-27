@@ -9,8 +9,16 @@ from ..db import get_connection, APP_VERSION, START_TIME
 router = APIRouter(tags=["health"])
 
 TABLES = [
-    "companies", "profitandloss", "balancesheet", "cashflow", "analysis",
-    "documents", "prosandcons", "sectors", "financial_ratios", "market_cap",
+    "companies",
+    "profitandloss",
+    "balancesheet",
+    "cashflow",
+    "analysis",
+    "documents",
+    "prosandcons",
+    "sectors",
+    "financial_ratios",
+    "market_cap",
 ]
 
 

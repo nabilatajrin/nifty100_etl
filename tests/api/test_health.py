@@ -12,7 +12,15 @@ def test_health_db_row_counts_has_all_tables(client):
     resp = client.get("/api/v1/health")
     counts = resp.json()["db_row_counts"]
     expected_tables = {
-        "companies", "profitandloss", "balancesheet", "cashflow", "analysis",
-        "documents", "prosandcons", "sectors", "financial_ratios", "market_cap",
+        "companies",
+        "profitandloss",
+        "balancesheet",
+        "cashflow",
+        "analysis",
+        "documents",
+        "prosandcons",
+        "sectors",
+        "financial_ratios",
+        "market_cap",
     }
     assert expected_tables.issubset(counts.keys())

@@ -32,24 +32,46 @@ def verify_quality_compounder(db_path: str):
 
     print("--- Quality Compounder spot-check ---")
     print(f"{len(result)} companies returned")
-    bad = result[(result["return_on_equity_pct"] <= 15)
-                 | ((result["debt_to_equity"] >= 1) & (result["broad_sector"] != "Financials"))]
+    bad = result[
+        (result["return_on_equity_pct"] <= 15)
+        | ((result["debt_to_equity"] >= 1) & (result["broad_sector"] != "Financials"))
+    ]
     if bad.empty:
-        print("PASS: all results satisfy ROE > 15% and D/E < 1 (or Financials carve-out)")
+        print(
+            "PASS: all results satisfy ROE > 15% and D/E < 1 (or Financials carve-out)"
+        )
     else:
         print(f"CHECK: {len(bad)} rows violate the threshold logic")
-        print(bad[["company_id", "return_on_equity_pct", "debt_to_equity"]].to_string(index=False))
+        print(
+            bad[["company_id", "return_on_equity_pct", "debt_to_equity"]].to_string(
+                index=False
+            )
+        )
 
     print("\nTop 5:")
-    print(result[["company_id", "return_on_equity_pct", "debt_to_equity",
-                  "composite_quality_score"]].head(5).to_string(index=False))
+    print(
+        result[
+            [
+                "company_id",
+                "return_on_equity_pct",
+                "debt_to_equity",
+                "composite_quality_score",
+            ]
+        ]
+        .head(5)
+        .to_string(index=False)
+    )
 
 
-def verify_peer_ranking(db_path: str, group: str = "IT Services", metric: str = "return_on_equity_pct"):
+def verify_peer_ranking(
+    db_path: str, group: str = "IT Services", metric: str = "return_on_equity_pct"
+):
     conn = sqlite3.connect(db_path)
     pct = pd.read_sql(
         "SELECT * FROM peer_percentiles WHERE peer_group_name = ? AND metric = ?",
-        conn, params=(group, metric))
+        conn,
+        params=(group, metric),
+    )
     conn.close()
 
     print(f"\n--- Peer ranking spot-check: {group}, {metric} ---")
@@ -62,13 +84,20 @@ def verify_peer_ranking(db_path: str, group: str = "IT Services", metric: str = 
     top_by_value = by_value.iloc[0]["company_id"]
     top_by_rank = by_rank.iloc[0]["company_id"]
 
-    print(pct.sort_values("value", ascending=False)
-          [["company_id", "value", "percentile_rank"]].to_string(index=False))
+    print(
+        pct.sort_values("value", ascending=False)[
+            ["company_id", "value", "percentile_rank"]
+        ].to_string(index=False)
+    )
 
     if top_by_value == top_by_rank:
-        print(f"\nPASS: highest {metric} ({top_by_value}) has the highest percentile rank")
+        print(
+            f"\nPASS: highest {metric} ({top_by_value}) has the highest percentile rank"
+        )
     else:
-        print(f"\nCHECK: highest value is {top_by_value} but highest rank is {top_by_rank}")
+        print(
+            f"\nCHECK: highest value is {top_by_value} but highest rank is {top_by_rank}"
+        )
 
 
 def main():

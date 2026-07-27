@@ -66,7 +66,11 @@ def compute_all(db_path: str | Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         de = R.debt_to_equity(borr, eq, res)
         icr = R.interest_coverage(op, p.get("other_income"), p.get("interest"))
         at = R.asset_turnover(sales, ta)
-        fcf = CF.free_cash_flow(cfo, cfi) if (cfo is not None or cfi is not None) else None
+        fcf = (
+            CF.free_cash_flow(cfo, cfi)
+            if (cfo is not None or cfi is not None)
+            else None
+        )
 
         # CAGRs from the company's revenue / PAT / EPS series
         rev_series = _series_for(pl, cid, "sales")
@@ -76,33 +80,41 @@ def compute_all(db_path: str | Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         pat_cagr5, _ = C.cagr_from_series(pat_series, 5)
         eps_cagr5, _ = C.cagr_from_series(eps_series, 5)
 
-        rows.append({
-            "company_id": cid, "year": yr,
-            "net_profit_margin_pct": npm,
-            "operating_profit_margin_pct": opm,
-            "return_on_equity_pct": roe,
-            "debt_to_equity": de,
-            "interest_coverage": icr,
-            "asset_turnover": at,
-            "free_cash_flow_cr": fcf,
-            "capex_cr": abs(cfi) if cfi is not None else None,
-            "earnings_per_share": p.get("eps"),
-            "book_value_per_share": None,  # computed in later sprint
-            "dividend_payout_ratio_pct": p.get("dividend_payout"),
-            "total_debt_cr": borr,
-            "cash_from_operations_cr": cfo,
-            "revenue_cagr_5yr": rev_cagr5,
-            "pat_cagr_5yr": pat_cagr5,
-            "eps_cagr_5yr": eps_cagr5,
-        })
+        rows.append(
+            {
+                "company_id": cid,
+                "year": yr,
+                "net_profit_margin_pct": npm,
+                "operating_profit_margin_pct": opm,
+                "return_on_equity_pct": roe,
+                "debt_to_equity": de,
+                "interest_coverage": icr,
+                "asset_turnover": at,
+                "free_cash_flow_cr": fcf,
+                "capex_cr": abs(cfi) if cfi is not None else None,
+                "earnings_per_share": p.get("eps"),
+                "book_value_per_share": None,  # computed in later sprint
+                "dividend_payout_ratio_pct": p.get("dividend_payout"),
+                "total_debt_cr": borr,
+                "cash_from_operations_cr": cfo,
+                "revenue_cagr_5yr": rev_cagr5,
+                "pat_cagr_5yr": pat_cagr5,
+                "eps_cagr_5yr": eps_cagr5,
+            }
+        )
 
         if cfo is not None and cfi is not None and cff is not None:
             so, si, sf, label = CF.capital_allocation_pattern(cfo, cfi, cff)
-            capital_rows.append({
-                "company_id": cid, "year": yr,
-                "cfo_sign": so, "cfi_sign": si, "cff_sign": sf,
-                "pattern_label": label,
-            })
+            capital_rows.append(
+                {
+                    "company_id": cid,
+                    "year": yr,
+                    "cfo_sign": so,
+                    "cfi_sign": si,
+                    "cff_sign": sf,
+                    "pattern_label": label,
+                }
+            )
 
     return pd.DataFrame(rows), pd.DataFrame(capital_rows)
 

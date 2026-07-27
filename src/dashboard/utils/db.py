@@ -44,11 +44,15 @@ def get_ratios(ticker: str, year: str | None = None) -> pd.DataFrame:
     if year:
         df = pd.read_sql(
             "SELECT * FROM financial_ratios WHERE company_id = ? AND year = ?",
-            conn, params=(ticker, year))
+            conn,
+            params=(ticker, year),
+        )
     else:
         df = pd.read_sql(
             "SELECT * FROM financial_ratios WHERE company_id = ? ORDER BY year",
-            conn, params=(ticker,))
+            conn,
+            params=(ticker,),
+        )
     conn.close()
     return df
 
@@ -58,7 +62,9 @@ def get_pl(ticker: str) -> pd.DataFrame:
     conn = _connect()
     df = pd.read_sql(
         "SELECT * FROM profitandloss WHERE company_id = ? ORDER BY year",
-        conn, params=(ticker,))
+        conn,
+        params=(ticker,),
+    )
     conn.close()
     return df
 
@@ -68,7 +74,9 @@ def get_bs(ticker: str) -> pd.DataFrame:
     conn = _connect()
     df = pd.read_sql(
         "SELECT * FROM balancesheet WHERE company_id = ? ORDER BY year",
-        conn, params=(ticker,))
+        conn,
+        params=(ticker,),
+    )
     conn.close()
     return df
 
@@ -78,7 +86,9 @@ def get_cf(ticker: str) -> pd.DataFrame:
     conn = _connect()
     df = pd.read_sql(
         "SELECT * FROM cashflow WHERE company_id = ? ORDER BY year",
-        conn, params=(ticker,))
+        conn,
+        params=(ticker,),
+    )
     conn.close()
     return df
 
@@ -97,7 +107,9 @@ def get_peers(group_name: str) -> pd.DataFrame:
     conn = _connect()
     df = pd.read_sql(
         "SELECT * FROM peer_percentiles WHERE peer_group_name = ?",
-        conn, params=(group_name,))
+        conn,
+        params=(group_name,),
+    )
     conn.close()
     return df
 
@@ -108,7 +120,8 @@ def get_peer_groups() -> list:
     try:
         groups = pd.read_sql(
             "SELECT DISTINCT peer_group_name FROM peer_percentiles ORDER BY peer_group_name",
-            conn)["peer_group_name"].tolist()
+            conn,
+        )["peer_group_name"].tolist()
     except Exception:
         groups = []
     conn.close()
@@ -121,7 +134,9 @@ def get_valuation(ticker: str) -> pd.DataFrame:
     try:
         df = pd.read_sql(
             "SELECT * FROM market_cap WHERE company_id = ? ORDER BY year",
-            conn, params=(ticker,))
+            conn,
+            params=(ticker,),
+        )
     except Exception:
         df = pd.DataFrame()
     conn.close()
@@ -132,7 +147,8 @@ def get_valuation(ticker: str) -> pd.DataFrame:
 def get_pros_cons(ticker: str) -> pd.DataFrame:
     conn = _connect()
     df = pd.read_sql(
-        "SELECT * FROM prosandcons WHERE company_id = ?", conn, params=(ticker,))
+        "SELECT * FROM prosandcons WHERE company_id = ?", conn, params=(ticker,)
+    )
     conn.close()
     return df
 
@@ -142,7 +158,9 @@ def get_documents(ticker: str) -> pd.DataFrame:
     conn = _connect()
     df = pd.read_sql(
         "SELECT * FROM documents WHERE company_id = ? ORDER BY Year DESC",
-        conn, params=(ticker,))
+        conn,
+        params=(ticker,),
+    )
     conn.close()
     return df
 
@@ -153,5 +171,13 @@ def get_capital_allocation() -> pd.DataFrame:
     path = "output/capital_allocation.csv"
     if os.path.exists(path):
         return pd.read_csv(path)
-    return pd.DataFrame(columns=["company_id", "year", "cfo_sign", "cfi_sign",
-                                 "cff_sign", "pattern_label"])
+    return pd.DataFrame(
+        columns=[
+            "company_id",
+            "year",
+            "cfo_sign",
+            "cfi_sign",
+            "cff_sign",
+            "pattern_label",
+        ]
+    )

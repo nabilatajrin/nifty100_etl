@@ -19,18 +19,30 @@ YEAR_RE = re.compile(r"^\d{4}-\d{2}$")
 
 # Map loaded table name -> target DB table + which columns the table keeps.
 # Time-series tables have a (company_id, year) PK and get deduped.
-TIMESERIES = {"profitandloss", "balancesheet", "cashflow",
-              "financial_ratios", "market_cap"}
+TIMESERIES = {
+    "profitandloss",
+    "balancesheet",
+    "cashflow",
+    "financial_ratios",
+    "market_cap",
+}
 # Tables keyed by company_id only
 COMPANY_KEYED = {"sectors"}
 
 
 def _audit_row(table, rows_in, rows_out, rejected, runtime):
-    return {"table": table, "rows_in": rows_in, "rows_out": rows_out,
-            "rejected": rejected, "runtime_s": round(runtime, 3)}
+    return {
+        "table": table,
+        "rows_in": rows_in,
+        "rows_out": rows_out,
+        "rejected": rejected,
+        "runtime_s": round(runtime, 3),
+    }
 
 
-def clean_table(name: str, df: pd.DataFrame, valid_ids: set) -> tuple[pd.DataFrame, int]:
+def clean_table(
+    name: str, df: pd.DataFrame, valid_ids: set
+) -> tuple[pd.DataFrame, int]:
     """Apply year/dedup/orphan cleaning. Returns (clean_df, rejected_count)."""
     start_rows = len(df)
     df = df.copy()
@@ -53,11 +65,17 @@ def clean_table(name: str, df: pd.DataFrame, valid_ids: set) -> tuple[pd.DataFra
     return df, rejected
 
 
-def build_database(tables: dict[str, pd.DataFrame],
-                   db_path: str | Path = "data/nifty100.db",
-                   schema_path: str | Path = "db/schema.sql",
-                   audit_path: str | Path = "output/load_audit.csv") -> None:
-    db_path, schema_path, audit_path = Path(db_path), Path(schema_path), Path(audit_path)
+def build_database(
+    tables: dict[str, pd.DataFrame],
+    db_path: str | Path = "data/nifty100.db",
+    schema_path: str | Path = "db/schema.sql",
+    audit_path: str | Path = "output/load_audit.csv",
+) -> None:
+    db_path, schema_path, audit_path = (
+        Path(db_path),
+        Path(schema_path),
+        Path(audit_path),
+    )
     db_path.parent.mkdir(parents=True, exist_ok=True)
     audit_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -74,9 +92,20 @@ def build_database(tables: dict[str, pd.DataFrame],
     valid_ids = set(tables["companies"]["id"]) if "companies" in tables else set()
 
     # Load companies FIRST (parent table), then the rest
-    load_order = ["companies", "sectors", "profitandloss", "balancesheet",
-                  "cashflow", "financial_ratios", "market_cap", "stock_prices",
-                  "analysis", "documents", "prosandcons", "peer_groups"]
+    load_order = [
+        "companies",
+        "sectors",
+        "profitandloss",
+        "balancesheet",
+        "cashflow",
+        "financial_ratios",
+        "market_cap",
+        "stock_prices",
+        "analysis",
+        "documents",
+        "prosandcons",
+        "peer_groups",
+    ]
 
     audit = []
     for name in load_order:

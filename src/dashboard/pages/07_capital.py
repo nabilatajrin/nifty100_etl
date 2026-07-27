@@ -10,7 +10,9 @@ import plotly.express as px
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from src.dashboard.utils.db import get_capital_allocation, get_companies
 
-st.set_page_config(page_title="Capital Allocation Map — Nifty 100 Analytics", layout="wide")
+st.set_page_config(
+    page_title="Capital Allocation Map — Nifty 100 Analytics", layout="wide"
+)
 st.title("🗺️ Capital Allocation Map")
 
 cap = get_capital_allocation()
@@ -25,12 +27,14 @@ if cap.empty:
 
 # latest year per company
 latest = cap.sort_values("year").groupby("company_id").tail(1)
-latest = latest.merge(companies[["id", "broad_sector"]], left_on="company_id",
-                      right_on="id", how="left")
+latest = latest.merge(
+    companies[["id", "broad_sector"]], left_on="company_id", right_on="id", how="left"
+)
 
 st.subheader("92 Companies by Capital Allocation Pattern")
 fig = px.treemap(
-    latest, path=["pattern_label", "company_id"],
+    latest,
+    path=["pattern_label", "company_id"],
     color="pattern_label",
 )
 fig.update_layout(height=600)
@@ -45,8 +49,9 @@ if patterns:
     subset = latest[latest["pattern_label"] == chosen]
     st.write(f"**{len(subset)} companies** with pattern **{chosen}**:")
     st.dataframe(
-        subset[["company_id", "broad_sector", "cfo_sign", "cfi_sign", "cff_sign"]]
-        .reset_index(drop=True),
+        subset[
+            ["company_id", "broad_sector", "cfo_sign", "cfi_sign", "cff_sign"]
+        ].reset_index(drop=True),
         use_container_width=True,
     )
 else:

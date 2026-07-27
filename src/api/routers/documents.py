@@ -27,6 +27,8 @@ def company_documents(ticker: str):
         d = dict(r)
         url = d.get("Annual_Report")
         # basic validity check without making a network call per-request
-        d["is_url_valid"] = bool(url and isinstance(url, str) and url.startswith("http"))
+        d["is_url_valid"] = bool(
+            url and isinstance(url, str) and url.startswith("http")
+        )
         out.append(d)
     return out

@@ -41,24 +41,45 @@ def main():
     for _, row in companies.iterrows():
         ticker, name = row["id"], row["company_name"]
 
-        pl_h = pd.read_sql("SELECT * FROM profitandloss WHERE company_id=? ORDER BY year",
-                          conn, params=(ticker,))
+        pl_h = pd.read_sql(
+            "SELECT * FROM profitandloss WHERE company_id=? ORDER BY year",
+            conn,
+            params=(ticker,),
+        )
         if len(pl_h) < MIN_YEARS:
-            skipped.append({"company_id": ticker, "years_available": len(pl_h),
-                            "reason": f"fewer than {MIN_YEARS} years of P&L data"})
+            skipped.append(
+                {
+                    "company_id": ticker,
+                    "years_available": len(pl_h),
+                    "reason": f"fewer than {MIN_YEARS} years of P&L data",
+                }
+            )
             continue
 
-        ratio_h = pd.read_sql("SELECT * FROM financial_ratios WHERE company_id=? ORDER BY year",
-                             conn, params=(ticker,))
-        bs_h = pd.read_sql("SELECT * FROM balancesheet WHERE company_id=? ORDER BY year",
-                          conn, params=(ticker,))
-        cf_h = pd.read_sql("SELECT * FROM cashflow WHERE company_id=? ORDER BY year",
-                          conn, params=(ticker,))
+        ratio_h = pd.read_sql(
+            "SELECT * FROM financial_ratios WHERE company_id=? ORDER BY year",
+            conn,
+            params=(ticker,),
+        )
+        bs_h = pd.read_sql(
+            "SELECT * FROM balancesheet WHERE company_id=? ORDER BY year",
+            conn,
+            params=(ticker,),
+        )
+        cf_h = pd.read_sql(
+            "SELECT * FROM cashflow WHERE company_id=? ORDER BY year",
+            conn,
+            params=(ticker,),
+        )
 
         pros, cons = [], []
         if not pc_all.empty:
-            pros = pc_all[(pc_all.company_id == ticker) & (pc_all.type == "pro")]["text"].tolist()
-            cons = pc_all[(pc_all.company_id == ticker) & (pc_all.type == "con")]["text"].tolist()
+            pros = pc_all[(pc_all.company_id == ticker) & (pc_all.type == "pro")][
+                "text"
+            ].tolist()
+            cons = pc_all[(pc_all.company_id == ticker) & (pc_all.type == "con")][
+                "text"
+            ].tolist()
 
         capital_label = None
         if not cap_all.empty:
@@ -68,16 +89,34 @@ def main():
 
         out_path = out_dir / f"{ticker}_tearsheet.pdf"
         try:
-            build_tearsheet(ticker, name, sector_map.get(ticker), ratio_h, pl_h, bs_h,
-                            cf_h, pros, cons, capital_label, str(out_path))
+            build_tearsheet(
+                ticker,
+                name,
+                sector_map.get(ticker),
+                ratio_h,
+                pl_h,
+                bs_h,
+                cf_h,
+                pros,
+                cons,
+                capital_label,
+                str(out_path),
+            )
             generated.append(ticker)
         except Exception as e:
-            skipped.append({"company_id": ticker, "years_available": len(pl_h),
-                            "reason": f"generation error: {e}"})
+            skipped.append(
+                {
+                    "company_id": ticker,
+                    "years_available": len(pl_h),
+                    "reason": f"generation error: {e}",
+                }
+            )
 
     conn.close()
 
-    skipped_df = pd.DataFrame(skipped, columns=["company_id", "years_available", "reason"])
+    skipped_df = pd.DataFrame(
+        skipped, columns=["company_id", "years_available", "reason"]
+    )
     Path("output").mkdir(exist_ok=True)
     skipped_df.to_csv("output/skipped_tearsheets.csv", index=False)
 

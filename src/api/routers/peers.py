@@ -17,7 +17,9 @@ def peer_group(group_name: str):
     ).fetchone()
     if not exists:
         conn.close()
-        raise HTTPException(status_code=404, detail=f"Peer group '{group_name}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Peer group '{group_name}' not found"
+        )
 
     rows = conn.execute(
         "SELECT * FROM peer_percentiles WHERE peer_group_name = ?", (group_name,)
@@ -37,8 +39,9 @@ def peer_radar(ticker: str):
     ).fetchone()
     if not company_row:
         conn.close()
-        raise HTTPException(status_code=404,
-                            detail=f"No peer group assigned for '{ticker}'")
+        raise HTTPException(
+            status_code=404, detail=f"No peer group assigned for '{ticker}'"
+        )
 
     group_name = company_row["peer_group_name"]
     group_rows = conn.execute(

@@ -15,21 +15,34 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from .cashflow_kpis import (
-    cfo_quality_score, capex_intensity, fcf_conversion_rate,
-    capital_allocation_pattern, distress_signal, deleveraging_flag,
+    cfo_quality_score,
+    capex_intensity,
+    fcf_conversion_rate,
+    capital_allocation_pattern,
+    distress_signal,
+    deleveraging_flag,
 )
 from .cagr import cagr_from_series
 
 
 def build_intelligence(conn) -> pd.DataFrame:
     cf = pd.read_sql("SELECT * FROM cashflow ORDER BY company_id, year", conn)
-    pl = pd.read_sql("SELECT company_id, year, net_profit, operating_profit, sales "
-                     "FROM profitandloss ORDER BY company_id, year", conn)
-    bs = pd.read_sql("SELECT company_id, year, borrowings FROM balancesheet "
-                     "ORDER BY company_id, year", conn)
+    pl = pd.read_sql(
+        "SELECT company_id, year, net_profit, operating_profit, sales "
+        "FROM profitandloss ORDER BY company_id, year",
+        conn,
+    )
+    bs = pd.read_sql(
+        "SELECT company_id, year, borrowings FROM balancesheet "
+        "ORDER BY company_id, year",
+        conn,
+    )
     sectors = pd.read_sql("SELECT company_id, broad_sector FROM sectors", conn)
-    fr = pd.read_sql("SELECT company_id, year, free_cash_flow_cr FROM financial_ratios "
-                     "ORDER BY company_id, year", conn)
+    fr = pd.read_sql(
+        "SELECT company_id, year, free_cash_flow_cr FROM financial_ratios "
+        "ORDER BY company_id, year",
+        conn,
+    )
 
     sector_map = dict(zip(sectors["company_id"], sectors["broad_sector"]))
     rows = []
@@ -40,8 +53,11 @@ def build_intelligence(conn) -> pd.DataFrame:
         fr_h = fr[fr["company_id"] == cid]
 
         # merge on year to align CFO/PAT for the quality-score average
-        merged = cf_h.merge(pl_h[["year", "net_profit", "operating_profit", "sales"]],
-                            on="year", how="inner")
+        merged = cf_h.merge(
+            pl_h[["year", "net_profit", "operating_profit", "sales"]],
+            on="year",
+            how="inner",
+        )
         if merged.empty:
             continue
 
@@ -50,14 +66,21 @@ def build_intelligence(conn) -> pd.DataFrame:
         cfo_score, cfo_label = cfo_quality_score(cfo_vals, pat_vals)
 
         latest = merged.iloc[-1]
-        capex_val, capex_label = capex_intensity(latest["investing_activity"], latest["sales"])
+        capex_val, capex_label = capex_intensity(
+            latest["investing_activity"], latest["sales"]
+        )
 
         fcf_series = fr_h["free_cash_flow_cr"].tolist()
-        fcf_cagr5, _ = cagr_from_series(fcf_series, 5) if len(fcf_series) >= 6 else (None, None)
+        fcf_cagr5, _ = (
+            cagr_from_series(fcf_series, 5) if len(fcf_series) >= 6 else (None, None)
+        )
 
         fcf_latest = fr_h["free_cash_flow_cr"].iloc[-1] if not fr_h.empty else None
-        fcf_conv = fcf_conversion_rate(fcf_latest, latest["operating_profit"]) \
-            if fcf_latest is not None else None
+        fcf_conv = (
+            fcf_conversion_rate(fcf_latest, latest["operating_profit"])
+            if fcf_latest is not None
+            else None
+        )
 
         cfo_latest = latest["operating_activity"]
         cff_latest = latest["financing_activity"]
@@ -66,27 +89,40 @@ def build_intelligence(conn) -> pd.DataFrame:
         borr_h = bs_h.sort_values("year")
         delever = False
         if len(borr_h) >= 2:
-            delever = deleveraging_flag(cff_latest, borr_h["borrowings"].iloc[-1],
-                                        borr_h["borrowings"].iloc[-2])
+            delever = deleveraging_flag(
+                cff_latest, borr_h["borrowings"].iloc[-1], borr_h["borrowings"].iloc[-2]
+            )
 
         so, si, sf, pattern_label = capital_allocation_pattern(
-            cfo_latest, latest["investing_activity"], cff_latest, cfo_score)
+            cfo_latest, latest["investing_activity"], cff_latest, cfo_score
+        )
 
-        rows.append({
-            "company_id": cid,
-            "sector": sector_map.get(cid, ""),
-            "cfo_quality_score": round(cfo_score, 3) if cfo_score is not None else None,
-            "cfo_quality_label": cfo_label,
-            "capex_intensity_pct": round(capex_val, 2) if capex_val is not None else None,
-            "capex_label": capex_label,
-            "fcf_cagr_5yr": round(fcf_cagr5, 2) if fcf_cagr5 is not None else None,
-            "fcf_conversion_pct": round(fcf_conv, 2) if fcf_conv is not None else None,
-            "distress_flag": distress,
-            "deleveraging_flag": delever,
-            "capital_allocation_label": pattern_label,
-            "_cfo_latest": cfo_latest, "_cff_latest": cff_latest,
-            "_net_profit_latest": pl_h["net_profit"].iloc[-1] if not pl_h.empty else None,
-        })
+        rows.append(
+            {
+                "company_id": cid,
+                "sector": sector_map.get(cid, ""),
+                "cfo_quality_score": (
+                    round(cfo_score, 3) if cfo_score is not None else None
+                ),
+                "cfo_quality_label": cfo_label,
+                "capex_intensity_pct": (
+                    round(capex_val, 2) if capex_val is not None else None
+                ),
+                "capex_label": capex_label,
+                "fcf_cagr_5yr": round(fcf_cagr5, 2) if fcf_cagr5 is not None else None,
+                "fcf_conversion_pct": (
+                    round(fcf_conv, 2) if fcf_conv is not None else None
+                ),
+                "distress_flag": distress,
+                "deleveraging_flag": delever,
+                "capital_allocation_label": pattern_label,
+                "_cfo_latest": cfo_latest,
+                "_cff_latest": cff_latest,
+                "_net_profit_latest": (
+                    pl_h["net_profit"].iloc[-1] if not pl_h.empty else None
+                ),
+            }
+        )
 
     return pd.DataFrame(rows)
 
@@ -105,10 +141,13 @@ def main():
     intel[public_cols].to_excel(out_dir / "cashflow_intelligence.xlsx", index=False)
 
     distress = intel[intel["distress_flag"]]
-    distress_out = distress.rename(columns={
-        "_cfo_latest": "cfo_latest", "_cff_latest": "cff_latest",
-        "_net_profit_latest": "net_profit_latest",
-    })[["company_id", "sector", "cfo_latest", "cff_latest", "net_profit_latest"]]
+    distress_out = distress.rename(
+        columns={
+            "_cfo_latest": "cfo_latest",
+            "_cff_latest": "cff_latest",
+            "_net_profit_latest": "net_profit_latest",
+        }
+    )[["company_id", "sector", "cfo_latest", "cff_latest", "net_profit_latest"]]
     distress_out.to_csv(out_dir / "distress_alerts.csv", index=False)
 
     print(f"cashflow_intelligence.xlsx: {len(intel)} rows")

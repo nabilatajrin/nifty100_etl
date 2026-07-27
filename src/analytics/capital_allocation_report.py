@@ -15,7 +15,9 @@ import pandas as pd
 from dotenv import load_dotenv
 
 
-def load_capital_allocation(path: str = "output/capital_allocation.csv") -> pd.DataFrame:
+def load_capital_allocation(
+    path: str = "output/capital_allocation.csv",
+) -> pd.DataFrame:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(
@@ -32,8 +34,12 @@ def verify_completeness(cap: pd.DataFrame, expected_companies: set) -> dict:
         "total_rows": len(cap),
         "companies_present": len(present_companies),
         "companies_missing": sorted(missing),
-        "min_years_per_company": int(rows_per_company.min()) if not rows_per_company.empty else 0,
-        "max_years_per_company": int(rows_per_company.max()) if not rows_per_company.empty else 0,
+        "min_years_per_company": (
+            int(rows_per_company.min()) if not rows_per_company.empty else 0
+        ),
+        "max_years_per_company": (
+            int(rows_per_company.max()) if not rows_per_company.empty else 0
+        ),
     }
 
 
@@ -51,13 +57,17 @@ def detect_pattern_changes(cap: pd.DataFrame) -> pd.DataFrame:
         years = grp["year"].tolist()
         for i in range(1, len(labels)):
             if labels[i] != labels[i - 1]:
-                changes.append({
-                    "company_id": cid,
-                    "year": years[i],
-                    "prior_pattern": labels[i - 1],
-                    "new_pattern": labels[i],
-                })
-    return pd.DataFrame(changes, columns=["company_id", "year", "prior_pattern", "new_pattern"])
+                changes.append(
+                    {
+                        "company_id": cid,
+                        "year": years[i],
+                        "prior_pattern": labels[i - 1],
+                        "new_pattern": labels[i],
+                    }
+                )
+    return pd.DataFrame(
+        changes, columns=["company_id", "year", "prior_pattern", "new_pattern"]
+    )
 
 
 def main():
@@ -77,8 +87,10 @@ def main():
         print(f"MISSING companies: {report['companies_missing']}")
     else:
         print("All companies present.")
-    print(f"Years per company: min={report['min_years_per_company']}, "
-          f"max={report['max_years_per_company']}")
+    print(
+        f"Years per company: min={report['min_years_per_company']}, "
+        f"max={report['max_years_per_company']}"
+    )
 
     print("\n--- Latest-year pattern distribution ---")
     dist = latest_year_distribution(cap)

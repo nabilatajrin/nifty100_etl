@@ -42,12 +42,13 @@ def test_core_file_correct_row_count(tmp_path):
     df = load_excel(f, is_core=True)
     assert len(df) == 2
 
+
 def test_core_file_correct_columns(tmp_path):
     f = tmp_path / "companies.xlsx"
-    _make_core_file(f, ["id", "company_name", "face_value"],
-                    [["tcs", "TCS", 1]])
+    _make_core_file(f, ["id", "company_name", "face_value"], [["tcs", "TCS", 1]])
     df = load_excel(f, is_core=True)
     assert list(df.columns) == ["id", "company_name", "face_value"]
+
 
 def test_core_file_skips_metadata_row(tmp_path):
     f = tmp_path / "companies.xlsx"
@@ -56,11 +57,13 @@ def test_core_file_skips_metadata_row(tmp_path):
     # metadata row must not appear as a data row
     assert "metadata row — ignored" not in df.values
 
+
 def test_supplementary_file_header_row0(tmp_path):
     f = tmp_path / "sectors.xlsx"
     _make_supp_file(f, ["company_id", "broad_sector"], [["TCS", "IT"], ["INFY", "IT"]])
     df = load_excel(f, is_core=False)
     assert len(df) == 2 and list(df.columns) == ["company_id", "broad_sector"]
+
 
 def test_ticker_normalised_on_load(tmp_path):
     f = tmp_path / "companies.xlsx"
@@ -68,28 +71,35 @@ def test_ticker_normalised_on_load(tmp_path):
     df = load_excel(f, is_core=True)
     assert df["id"].iloc[0] == "TCS"
 
+
 def test_company_id_normalised_on_load(tmp_path):
     f = tmp_path / "profitandloss.xlsx"
-    _make_core_file(f, ["id", "company_id", "year", "sales"],
-                    [[1, "  tcs  ", "Mar-23", 1000]])
+    _make_core_file(
+        f, ["id", "company_id", "year", "sales"], [[1, "  tcs  ", "Mar-23", 1000]]
+    )
     df = load_excel(f, is_core=True)
     assert df["company_id"].iloc[0] == "TCS"
 
+
 def test_year_normalised_on_load(tmp_path):
     f = tmp_path / "profitandloss.xlsx"
-    _make_core_file(f, ["id", "company_id", "year", "sales"],
-                    [[1, "TCS", "Mar-23", 1000]])
+    _make_core_file(
+        f, ["id", "company_id", "year", "sales"], [[1, "TCS", "Mar-23", 1000]]
+    )
     df = load_excel(f, is_core=True)
     assert df["year"].iloc[0] == "2023-03"
+
 
 def test_row_id_not_treated_as_ticker(tmp_path):
     """Numeric 'id' column (row number) in child tables should stay numeric,
     not get run through ticker normalisation."""
     f = tmp_path / "profitandloss.xlsx"
-    _make_core_file(f, ["id", "company_id", "year", "sales"],
-                    [[42, "TCS", "Mar-23", 1000]])
+    _make_core_file(
+        f, ["id", "company_id", "year", "sales"], [[42, "TCS", "Mar-23", 1000]]
+    )
     df = load_excel(f, is_core=True)
     assert df["id"].iloc[0] == 42
+
 
 def test_load_all_reports_missing_file(tmp_path, capsys):
     raw_dir = tmp_path / "raw"
@@ -102,16 +112,21 @@ def test_load_all_reports_missing_file(tmp_path, capsys):
     assert "MISSING" in captured.out
     assert tables == {}
 
+
 def test_load_all_loads_multiple_files(tmp_path):
     raw_dir = tmp_path / "raw"
     supp_dir = tmp_path / "supp"
     raw_dir.mkdir()
     supp_dir.mkdir()
 
-    _make_core_file(raw_dir / "companies.xlsx", ["id", "company_name"],
-                    [["tcs", "TCS"], ["infy", "Infosys"]])
-    _make_supp_file(supp_dir / "sectors.xlsx", ["company_id", "broad_sector"],
-                    [["TCS", "IT"]])
+    _make_core_file(
+        raw_dir / "companies.xlsx",
+        ["id", "company_name"],
+        [["tcs", "TCS"], ["infy", "Infosys"]],
+    )
+    _make_supp_file(
+        supp_dir / "sectors.xlsx", ["company_id", "broad_sector"], [["TCS", "IT"]]
+    )
 
     tables = load_all(raw_dir, supp_dir)
     assert "companies" in tables and len(tables["companies"]) == 2

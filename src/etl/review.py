@@ -34,7 +34,8 @@ def main() -> None:
             try:
                 df = pd.read_sql(
                     f"SELECT year FROM {tbl} WHERE company_id = ? ORDER BY year",
-                    conn, params=(cid,),
+                    conn,
+                    params=(cid,),
                 )
                 yrs = df["year"].tolist()
                 span = f"{yrs[0]} → {yrs[-1]}" if yrs else "no data"

@@ -47,7 +47,13 @@ def main() -> None:
     print(f"High-growth (rev CAGR > 15%): {len(high_growth)} companies")
     print()
     print("Sample of Quality screen results:")
-    cols = ["company_id", "year", "return_on_equity_pct", "debt_to_equity", "revenue_cagr_5yr"]
+    cols = [
+        "company_id",
+        "year",
+        "return_on_equity_pct",
+        "debt_to_equity",
+        "revenue_cagr_5yr",
+    ]
     print(quality[cols].head(10).to_string(index=False))
 
 

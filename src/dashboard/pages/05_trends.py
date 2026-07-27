@@ -36,8 +36,10 @@ METRIC_CHOICES = {
 }
 
 selected_labels = st.multiselect(
-    "Metrics to overlay (up to 3)", list(METRIC_CHOICES.keys()),
-    default=["ROE (%)"], max_selections=3,
+    "Metrics to overlay (up to 3)",
+    list(METRIC_CHOICES.keys()),
+    default=["ROE (%)"],
+    max_selections=3,
 )
 
 ratios = get_ratios(ticker).sort_values("year").tail(10)
@@ -58,11 +60,16 @@ for label in selected_labels:
     series = ratios[col]
     yoy = series.pct_change() * 100
 
-    fig.add_trace(go.Scatter(
-        x=ratios["year"], y=series, mode="lines+markers", name=label,
-        text=[f"{v:+.1f}% YoY" if pd.notna(v) else "" for v in yoy],
-        hovertemplate="%{x}: %{y:.2f}<br>%{text}<extra></extra>",
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=ratios["year"],
+            y=series,
+            mode="lines+markers",
+            name=label,
+            text=[f"{v:+.1f}% YoY" if pd.notna(v) else "" for v in yoy],
+            hovertemplate="%{x}: %{y:.2f}<br>%{text}<extra></extra>",
+        )
+    )
 
 fig.update_layout(height=500, title=f"{ticker} — {len(ratios)}-Year Trend")
 st.plotly_chart(fig, use_container_width=True)

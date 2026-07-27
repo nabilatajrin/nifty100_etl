@@ -16,6 +16,7 @@ import sqlite3
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,15 +27,17 @@ from ..screener.composite_score import scale_0_100
 
 AXES = [
     ("return_on_equity_pct", "ROE", False),
-    ("return_on_capital_employed_pct", "ROCE", False),  # may be absent; handled gracefully
+    (
+        "return_on_capital_employed_pct",
+        "ROCE",
+        False,
+    ),  # may be absent; handled gracefully
     ("net_profit_margin_pct", "NPM", False),
     ("debt_to_equity", "D/E (inv)", True),
     ("free_cash_flow_cr", "FCF", False),
     ("pat_cagr_5yr", "PAT CAGR 5yr", False),
     ("revenue_cagr_5yr", "Revenue CAGR 5yr", False),
     ("composite_quality_score", "Composite Score", False),
-
-
 ]
 
 
@@ -53,8 +56,14 @@ def build_scored_frame(fr: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def plot_radar(company_id: str, company_vals: list, peer_avg: list,
-               labels: list, out_path: Path, group_name: str = None):
+def plot_radar(
+    company_id: str,
+    company_vals: list,
+    peer_avg: list,
+    labels: list,
+    out_path: Path,
+    group_name: str = None,
+):
     n = len(labels)
     angles = np.linspace(0, 2 * np.pi, n, endpoint=False).tolist()
     angles += angles[:1]
@@ -65,8 +74,14 @@ def plot_radar(company_id: str, company_vals: list, peer_avg: list,
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
     ax.plot(angles, company_vals, color="#2E75B6", linewidth=2)
     ax.fill(angles, company_vals, color="#2E75B6", alpha=0.25, label=company_id)
-    ax.plot(angles, peer_avg, color="#C00000", linewidth=1.5, linestyle="--",
-            label="Peer group avg" if group_name else "Nifty 100 avg")
+    ax.plot(
+        angles,
+        peer_avg,
+        color="#C00000",
+        linewidth=1.5,
+        linestyle="--",
+        label="Peer group avg" if group_name else "Nifty 100 avg",
+    )
 
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(labels, fontsize=9)
@@ -74,7 +89,9 @@ def plot_radar(company_id: str, company_vals: list, peer_avg: list,
     ax.set_yticks([25, 50, 75, 100])
     ax.set_yticklabels(["25", "50", "75", "100"], fontsize=7)
 
-    title = f"{company_id}" + (f" vs {group_name}" if group_name else " vs Nifty 100 avg")
+    title = f"{company_id}" + (
+        f" vs {group_name}" if group_name else " vs Nifty 100 avg"
+    )
     ax.set_title(title, fontsize=12, weight="bold", pad=20)
     ax.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1), fontsize=8)
 
@@ -94,17 +111,23 @@ def main():
     fr = fr.merge(sectors, on="company_id", how="left")
 
     peers = pd.read_sql("SELECT * FROM peer_groups", conn)
-    group_col = next((c for c in peers.columns
-                      if "group" in c.lower() and "name" in c.lower()), None)
+    group_col = next(
+        (c for c in peers.columns if "group" in c.lower() and "name" in c.lower()), None
+    )
     if group_col is None:
-        group_col = next((c for c in peers.columns
-                          if "peer" in c.lower() and c != "company_id"), None)
-    peers = peers.rename(columns={group_col: "peer_group_name"})[["company_id", "peer_group_name"]]
+        group_col = next(
+            (c for c in peers.columns if "peer" in c.lower() and c != "company_id"),
+            None,
+        )
+    peers = peers.rename(columns={group_col: "peer_group_name"})[
+        ["company_id", "peer_group_name"]
+    ]
     conn.close()
 
     # composite score must exist for the last axis
     if "composite_quality_score" not in fr.columns:
         from ..screener.composite_score import composite_score
+
         fr["composite_quality_score"] = composite_score(fr)
 
     scored = build_scored_frame(fr)

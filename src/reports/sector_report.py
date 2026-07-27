@@ -20,13 +20,30 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 
 NAVY = colors.HexColor("#1F3864")
 styles = getSampleStyleSheet()
-CELL = ParagraphStyle("cell", parent=styles["Normal"], fontSize=7, leading=9, wordWrap="CJK")
+CELL = ParagraphStyle(
+    "cell", parent=styles["Normal"], fontSize=7, leading=9, wordWrap="CJK"
+)
 
-METRICS = ["return_on_equity_pct", "operating_profit_margin_pct", "net_profit_margin_pct",
-          "debt_to_equity", "revenue_cagr_5yr", "pat_cagr_5yr",
-          "free_cash_flow_cr", "interest_coverage"]
-METRIC_LABELS = ["ROE %", "OPM %", "NPM %", "D/E", "Rev CAGR 5yr %",
-                "PAT CAGR 5yr %", "FCF ₹Cr", "ICR"]
+METRICS = [
+    "return_on_equity_pct",
+    "operating_profit_margin_pct",
+    "net_profit_margin_pct",
+    "debt_to_equity",
+    "revenue_cagr_5yr",
+    "pat_cagr_5yr",
+    "free_cash_flow_cr",
+    "interest_coverage",
+]
+METRIC_LABELS = [
+    "ROE %",
+    "OPM %",
+    "NPM %",
+    "D/E",
+    "Rev CAGR 5yr %",
+    "PAT CAGR 5yr %",
+    "FCF ₹Cr",
+    "ICR",
+]
 
 
 def _fmt(v):
@@ -34,56 +51,96 @@ def _fmt(v):
 
 
 def build_sector_pdf(sector: str, sector_df: pd.DataFrame, out_path: str):
-    doc = SimpleDocTemplate(out_path, pagesize=A4, topMargin=1.2 * cm,
-                            bottomMargin=1.2 * cm, leftMargin=1.2 * cm, rightMargin=1.2 * cm)
+    doc = SimpleDocTemplate(
+        out_path,
+        pagesize=A4,
+        topMargin=1.2 * cm,
+        bottomMargin=1.2 * cm,
+        leftMargin=1.2 * cm,
+        rightMargin=1.2 * cm,
+    )
     elements = []
 
-    header_style = ParagraphStyle("h", parent=styles["Title"], textColor=colors.white, fontSize=16)
-    header = Table([[Paragraph(f"{sector} — Sector Report", header_style)]], colWidths=[19 * cm])
-    header.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), NAVY),
-                                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                                ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
+    header_style = ParagraphStyle(
+        "h", parent=styles["Title"], textColor=colors.white, fontSize=16
+    )
+    header = Table(
+        [[Paragraph(f"{sector} — Sector Report", header_style)]], colWidths=[19 * cm]
+    )
+    header.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), NAVY),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
     elements.append(header)
     elements.append(Spacer(1, 0.4 * cm))
 
-    elements.append(Paragraph(f"<b>{len(sector_df)} companies in this sector</b>", styles["Normal"]))
+    elements.append(
+        Paragraph(f"<b>{len(sector_df)} companies in this sector</b>", styles["Normal"])
+    )
     elements.append(Spacer(1, 0.2 * cm))
 
     available_metrics = [m for m in METRICS if m in sector_df.columns]
-    available_labels = [lbl for lbl, m in zip(METRIC_LABELS, METRICS) if m in sector_df.columns]
+    available_labels = [
+        lbl for lbl, m in zip(METRIC_LABELS, METRICS) if m in sector_df.columns
+    ]
 
-    medians = sector_df[available_metrics].median(numeric_only=True) if available_metrics else pd.Series(dtype=float)
+    medians = (
+        sector_df[available_metrics].median(numeric_only=True)
+        if available_metrics
+        else pd.Series(dtype=float)
+    )
     med_data = [["Metric", "Sector Median"]] + [
         [Paragraph(lbl, CELL), Paragraph(_fmt(medians.get(m)), CELL)]
         for lbl, m in zip(available_labels, available_metrics)
     ]
     med_table = Table(med_data, colWidths=[8 * cm, 6 * cm])
-    med_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-    ]))
+    med_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
     elements.append(med_table)
     elements.append(Spacer(1, 0.5 * cm))
 
     elements.append(Paragraph("<b>Companies in this sector</b>", styles["Heading3"]))
-    header_row = [Paragraph("Ticker", CELL)] + [Paragraph(lbl, CELL) for lbl in available_labels]
+    header_row = [Paragraph("Ticker", CELL)] + [
+        Paragraph(lbl, CELL) for lbl in available_labels
+    ]
     rows = [header_row]
     for _, r in sector_df.iterrows():
-        row = [Paragraph(str(r["company_id"]), CELL)] + \
-              [Paragraph(_fmt(r.get(m)), CELL) for m in available_metrics]
+        row = [Paragraph(str(r["company_id"]), CELL)] + [
+            Paragraph(_fmt(r.get(m)), CELL) for m in available_metrics
+        ]
         rows.append(row)
 
     col_widths = [2.2 * cm] + [2.1 * cm] * len(available_metrics)
     company_table = Table(rows, colWidths=col_widths, repeatRows=1)
-    company_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
-        ("FONTSIZE", (0, 0), (-1, -1), 7),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F2F2F2")]),
-    ]))
+    company_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+                ("FONTSIZE", (0, 0), (-1, -1), 7),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -1),
+                    [colors.white, colors.HexColor("#F2F2F2")],
+                ),
+            ]
+        )
+    )
     elements.append(company_table)
 
     doc.build(elements)

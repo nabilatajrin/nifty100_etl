@@ -21,8 +21,9 @@ def load_config(path: str | Path = "config/screener_config.yaml") -> dict:
         return yaml.safe_load(f)
 
 
-def _apply_one_filter(df: pd.DataFrame, meta: dict, threshold, metric_key: str,
-                      sectors: pd.Series) -> pd.Series:
+def _apply_one_filter(
+    df: pd.DataFrame, meta: dict, threshold, metric_key: str, sectors: pd.Series
+) -> pd.Series:
     """Return a boolean mask for one metric filter."""
     col = meta["column"]
     direction = meta["direction"]
@@ -51,8 +52,9 @@ def _apply_one_filter(df: pd.DataFrame, meta: dict, threshold, metric_key: str,
     return keep
 
 
-def apply_filters(df: pd.DataFrame, thresholds: dict, config: dict,
-                  sectors: pd.Series) -> pd.DataFrame:
+def apply_filters(
+    df: pd.DataFrame, thresholds: dict, config: dict, sectors: pd.Series
+) -> pd.DataFrame:
     """Apply a dict of {metric_key: threshold} filters. Returns filtered rows."""
     mask = pd.Series(True, index=df.index)
     metrics = config["metrics"]
@@ -60,8 +62,9 @@ def apply_filters(df: pd.DataFrame, thresholds: dict, config: dict,
     for metric_key, threshold in thresholds.items():
         if metric_key not in metrics:
             continue
-        mask &= _apply_one_filter(df, metrics[metric_key], threshold,
-                                  metric_key, sectors)
+        mask &= _apply_one_filter(
+            df, metrics[metric_key], threshold, metric_key, sectors
+        )
 
     result = df[mask].copy()
     if "composite_quality_score" in result.columns:
@@ -69,8 +72,9 @@ def apply_filters(df: pd.DataFrame, thresholds: dict, config: dict,
     return result
 
 
-def run_preset(df: pd.DataFrame, preset_name: str, config: dict,
-               sectors: pd.Series) -> pd.DataFrame:
+def run_preset(
+    df: pd.DataFrame, preset_name: str, config: dict, sectors: pd.Series
+) -> pd.DataFrame:
     """Run a named preset from the config."""
     thresholds = config["presets"][preset_name]
     return apply_filters(df, thresholds, config, sectors)

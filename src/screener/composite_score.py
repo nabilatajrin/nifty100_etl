@@ -37,15 +37,15 @@ def scale_0_100(s: pd.Series, invert: bool = False) -> pd.Series:
 
 # metric -> (column, invert)
 COMPONENTS = {
-    "roe":        ("return_on_equity_pct", False, 15),
-    "npm":        ("net_profit_margin_pct", False, 10),
-    "rev_cagr":   ("revenue_cagr_5yr", False, 10),
-    "pat_cagr":   ("pat_cagr_5yr", False, 10),
-    "de":         ("debt_to_equity", True, 10),   # inverted
-    "icr":        ("interest_coverage", False, 5),
-    "fcf":        ("free_cash_flow_cr", False, 15),
+    "roe": ("return_on_equity_pct", False, 15),
+    "npm": ("net_profit_margin_pct", False, 10),
+    "rev_cagr": ("revenue_cagr_5yr", False, 10),
+    "pat_cagr": ("pat_cagr_5yr", False, 10),
+    "de": ("debt_to_equity", True, 10),  # inverted
+    "icr": ("interest_coverage", False, 5),
+    "fcf": ("free_cash_flow_cr", False, 15),
     "asset_turn": ("asset_turnover", False, 5),
-    "opm":        ("operating_profit_margin_pct", False, 10),
+    "opm": ("operating_profit_margin_pct", False, 10),
 }
 
 
@@ -63,7 +63,9 @@ def composite_score(df: pd.DataFrame) -> pd.Series:
     return total.round(2)
 
 
-def sector_relative_score(df: pd.DataFrame, sector_col: str = "broad_sector") -> pd.Series:
+def sector_relative_score(
+    df: pd.DataFrame, sector_col: str = "broad_sector"
+) -> pd.Series:
     """Composite score normalised within each sector."""
     out = pd.Series(0.0, index=df.index)
     if sector_col not in df.columns:

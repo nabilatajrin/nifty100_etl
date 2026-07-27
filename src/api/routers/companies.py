@@ -27,12 +27,22 @@ def _year_filter_clause(from_year, to_year) -> tuple:
 
 
 @router.get("/companies")
-def list_companies(sector: str = None, market_cap_category: str = None, search: str = None):
+def list_companies(
+    sector: str = None, market_cap_category: str = None, search: str = None
+):
     """List all companies, with optional sector / market-cap / name-ticker search filters."""
     conn = get_connection()
     comp_cols = [r["name"] for r in conn.execute("PRAGMA table_info(companies)")]
-    roe_col = "c.roe_percentage AS roe_pct" if "roe_percentage" in comp_cols else "NULL AS roe_pct"
-    roce_col = "c.roce_percentage AS roce_pct" if "roce_percentage" in comp_cols else "NULL AS roce_pct"
+    roe_col = (
+        "c.roe_percentage AS roe_pct"
+        if "roe_percentage" in comp_cols
+        else "NULL AS roe_pct"
+    )
+    roce_col = (
+        "c.roce_percentage AS roce_pct"
+        if "roce_percentage" in comp_cols
+        else "NULL AS roce_pct"
+    )
 
     sql = f"""
         SELECT c.id, c.company_name, s.broad_sector, s.sub_sector,
@@ -67,8 +77,12 @@ def get_company(ticker: str):
         conn.close()
         raise HTTPException(status_code=404, detail=f"Company '{ticker}' not found")
 
-    comp = dict(conn.execute("SELECT * FROM companies WHERE id = ?", (ticker,)).fetchone())
-    sector_row = conn.execute("SELECT * FROM sectors WHERE company_id = ?", (ticker,)).fetchone()
+    comp = dict(
+        conn.execute("SELECT * FROM companies WHERE id = ?", (ticker,)).fetchone()
+    )
+    sector_row = conn.execute(
+        "SELECT * FROM sectors WHERE company_id = ?", (ticker,)
+    ).fetchone()
     latest_ratios = conn.execute(
         "SELECT * FROM financial_ratios WHERE company_id = ? ORDER BY year DESC LIMIT 1",
         (ticker,),
@@ -146,7 +160,9 @@ def get_tearsheet(ticker: str):
 
     path = Path("reports/tearsheets") / f"{ticker}_tearsheet.pdf"
     if not path.exists():
-        raise HTTPException(status_code=404,
-                            detail=f"Tearsheet for '{ticker}' has not been generated")
-    return FileResponse(str(path), media_type="application/pdf",
-                        filename=f"{ticker}_tearsheet.pdf")
+        raise HTTPException(
+            status_code=404, detail=f"Tearsheet for '{ticker}' has not been generated"
+        )
+    return FileResponse(
+        str(path), media_type="application/pdf", filename=f"{ticker}_tearsheet.pdf"
+    )
