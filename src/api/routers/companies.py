@@ -30,9 +30,13 @@ def _year_filter_clause(from_year, to_year) -> tuple:
 def list_companies(sector: str = None, market_cap_category: str = None, search: str = None):
     """List all companies, with optional sector / market-cap / name-ticker search filters."""
     conn = get_connection()
-    sql = """
+    comp_cols = [r["name"] for r in conn.execute("PRAGMA table_info(companies)")]
+    roe_col = "c.roe_percentage AS roe_pct" if "roe_percentage" in comp_cols else "NULL AS roe_pct"
+    roce_col = "c.roce_percentage AS roce_pct" if "roce_percentage" in comp_cols else "NULL AS roce_pct"
+
+    sql = f"""
         SELECT c.id, c.company_name, s.broad_sector, s.sub_sector,
-               c.roe_percentage AS roe_pct, c.roce_percentage AS roce_pct,
+               {roe_col}, {roce_col},
                s.market_cap_category
         FROM companies c
         LEFT JOIN sectors s ON s.company_id = c.id
