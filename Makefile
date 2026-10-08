@@ -15,30 +15,30 @@ help:
 	@echo "  make ratios      - Compute financial ratios"
 	@echo "  make test        - Run the unit test suite with pytest"
 	@echo "  make report      - Generate the analysis report"
-	@echo "  make dashboard   - Launch the dashboard"
+	@echo "  make dashboard   - Launch the Streamlit dashboard"
 	@echo "  make api         - Start the API server"
 	@echo "  make clean       - Remove generated files (db, caches, outputs)"
 
 load:
-	$(PYTHON) src/etl/loader.py
+	$(PYTHON) -m src.etl.db_loader
 
 ratios:
-	$(PYTHON) src/etl/compute_ratios.py
+	$(PYTHON) -m src.analytics.compute_ratios
 
 test:
 	pytest tests/ -v
 
 report:
-	$(PYTHON) src/report.py
+	$(PYTHON) -m src.analytics.capital_allocation_report
 
 dashboard:
-	$(PYTHON) src/dashboard.py
+	streamlit run src/dashboard/app.py
 
 api:
-	$(PYTHON) src/api.py
+	$(PYTHON) -m src.api.main
 
 clean:
-	rm -f db/*.db
+	rm -f data/*.db
 	rm -rf __pycache__ */__pycache__ */*/__pycache__
 	rm -rf .pytest_cache
 	rm -f output/*.csv
